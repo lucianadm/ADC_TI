@@ -1,0 +1,545 @@
+% Fs=2000
+% Tc=Tc*20000
+% L=100000000;
+% bits=5
+% TTS=50
+% M=3
+% Ag=randn(1,M+AM)*0.2;%error de amplitud de cada ADC
+% Ao=randn(1,M+AM)*0.2;%error de offset de cada ADC
+% At=floor(rand(1,M+AM)*TTS/6);%error de j
+
+clc
+clear
+Fs = 2000;            % Sampling frequency                    
+Ts = 1/Fs;             % Sampling period  
+Tc=Ts*20000;
+fc=1/Tc;
+L = 100000000;             % Length of signal
+t = (0:L-1)*Ts;        % Time vector
+
+
+bits=5;
+niveles=2^bits-1;   %-2^(bits-1)=-16 a  2^(bits-1)-1=15
+
+uu = (2^bits-1)/2*sin(2*pi*fc*t); %señal  sinusoide de fc Hz 
+u=ceil(uu);
+
+f = Fs*(0:(L/2))/L;
+
+M=3;  %cantidad de ADCs
+AM=1;   %ADC extra para la aleatorizacion
+MAM=M+AM;   %cantidad de ADCs totales
+TTS=50;
+sfdr_y(1)=0;
+sfdr_y(2)=0;
+sfdr_y(3)=0;
+sfdr_y(4)=0;
+sfdr_y(5)=0;
+sfdr_y(6)=0;
+sfdr_y(7)=0;
+sfdr_y(8)=0;
+sfdr_y(9)=0;
+sfdr_y(10)=0;
+sfdr_y(11)=0;
+
+sec7 = comm.PNSequence('Polynomial','x^3+x^2+1', ...   %r=3 =>periodo 2^r-1
+    'InitialConditions',[0 0 1],'SamplesPerFrame',1);
+sec15 = comm.PNSequence('Polynomial','x^4+x^3+1', ...   %r=4 =>periodo 2^r-1
+    'InitialConditions',[0 0 0 1],'SamplesPerFrame',1); 
+sec31 = comm.PNSequence('Polynomial','x^5+x^3+1', ...    %r=5 =>periodo 2^r-1
+    'InitialConditions',[0 0 1 0 1],'SamplesPerFrame',1);
+sec63 = comm.PNSequence('Polynomial','x^6+x^5+1', ...        %r=6 =>periodo 2^r-1
+    'InitialConditions',[1 0 0 1 0 1 ],'SamplesPerFrame',1);
+sec127 = comm.PNSequence('Polynomial','x^7+x^6+1', ...  %r=7 =>periodo 2^r-1
+    'InitialConditions',[ 1 0 0 1 0 1 0],'SamplesPerFrame',1);
+sec255 = comm.PNSequence('Polynomial','x^8+x^6+x^5+x^4+1', ...  %r= 8=>periodo 2^r-1
+    'InitialConditions',[0 1 0 0 1 0 1 0],'SamplesPerFrame',1);
+sec511 = comm.PNSequence('Polynomial','x^9+x^5+1', ...   %r=9 =>periodo 2^r-1
+    'InitialConditions', [0 0 0 1 0 0 0 1 0],'SamplesPerFrame',1);
+sec1023 = comm.PNSequence('Polynomial','x^10+x^7+1', ...   %r=10 =>periodo 2^r-1
+    'InitialConditions', [0 0 0 1 0 0 0 1 0 0],'SamplesPerFrame',1);
+sec8191 = comm.PNSequence('Polynomial','x^13+x^12+x^10+x^9+1', ...%r=13 =>periodo 2^r-1
+    'InitialConditions', [0 0 1 0 0 0 0 1 0 0 0 1 0],'SamplesPerFrame',1);
+secmucho = comm.PNSequence('Polynomial','x^40+x^5+x^4+x^3+1', ...  %r=40 =>periodo 2^r-1
+    'InitialConditions',[0 0 0 1 0 0 0 1 0 0 0 1 1 1 0 0 0 1 0 0 0 1 1 1 0 0 0 1 0 0 0 1 1 1 0 0 0 1 0 0],'SamplesPerFrame',1);
+promedia=100;
+for prom=1:promedia
+
+mem1_7=2;   %registro donde guarda el ADC que se eligio el ciclo anterior
+mem2_7=3;    %registro donde guarda el ADC que se eligio 2 ciclos antes
+elige0_7=4;  %registro donde guarda el ADC que se peude elegir
+elige1_7=1;   %registro donde guarda el ADC que se peude elegir
+
+mem1_15=2;   %registro donde guarda el ADC que se eligio el ciclo anterior
+mem2_15=3;    %registro donde guarda el ADC que se eligio 2 ciclos antes
+elige0_15=4;  %registro donde guarda el ADC que se peude elegir
+elige1_15=1;   %registro donde guarda el ADC que se peude elegir
+
+
+mem1_31=2;   %registro donde guarda el ADC que se eligio el ciclo anterior
+mem2_31=3;    %registro donde guarda el ADC que se eligio 2 ciclos antes
+elige0_31=4;  %registro donde guarda el ADC que se peude elegir
+elige1_31=1;   %registro donde guarda el ADC que se peude elegir
+
+%repite todo para cada secuencia
+mem1_63=2;  %registro donde guarda el ADC que se eligio el ciclo anterior
+mem2_63=3;   %registro donde guarda el ADC que se eligio 2 ciclos antes
+elige0_63=4;  %registro donde guarda el ADC que se peude elegir
+elige1_63=1;   %registro donde guarda el ADC que se peude elegir
+
+%repite todo para cada secuencia
+mem1_127=2;  %registro donde guarda el ADC que se eligio el ciclo anterior
+mem2_127=3;   %registro donde guarda el ADC que se eligio 2 ciclos antes
+elige0_127=4;  %registro donde guarda el ADC que se peude elegir
+elige1_127=1;   %registro donde guarda el ADC que se peude elegir
+
+%repite todo para cada secuencia 511
+mem1_511=2;  %registro donde guarda el ADC que se eligio el ciclo anterior
+mem2_511=3;   %registro donde guarda el ADC que se eligio 2 ciclos antes
+elige0_511=4;  %registro donde guarda el ADC que se peude elegir
+elige1_511=1;   %registro donde guarda el ADC que se peude elegir
+
+%repite todo para cada secuencia 8191
+mem1_8191=2;  %registro donde guarda el ADC que se eligio el ciclo anterior
+mem2_8191=3;   %registro donde guarda el ADC que se eligio 2 ciclos antes
+elige0_8191=4;  %registro donde guarda el ADC que se peude elegir
+elige1_8191=1;   %registro donde guarda el ADC que se peude elegir
+
+%repite todo para cada secuencia 1.099511627775000e+12
+mem1_m=2;  %registro donde guarda el ADC que se eligio el ciclo anterior
+mem2_m=3;   %registro donde guarda el ADC que se eligio 2 ciclos antes
+elige0_m=4;  %registro donde guarda el ADC que se peude elegir
+elige1_m=1;   %registro donde guarda el ADC que se peude elegir
+
+%repite todo para cada secuencia caotica
+mem1_c=2;  %registro donde guarda el ADC que se eligio el ciclo anterior
+mem2_c=3;   %registro donde guarda el ADC que se eligio 2 ciclos antes
+elige0_c=4;  %registro donde guarda el ADC que se peude elegir
+elige1_c=1;   %registro donde guarda el ADC que se peude elegir
+
+%repite todo para cada secuencia rand de matlab
+mem1_r=2;  %registro donde guarda el ADC que se eligio el ciclo anterior
+mem2_r=3;   %registro donde guarda el ADC que se eligio 2 ciclos antes
+elige0_r=4;  %registro donde guarda el ADC que se peude elegir
+elige1_r=1;   %registro donde guarda el ADC que se peude elegir
+
+Ag=randn(1,M+AM)*0.2;%error de amplitud de cada ADC
+Ao=randn(1,M+AM)*0.2;%error de offset de cada ADC
+At=floor(rand(1,M+AM)*TTS/6);%error de jitter de cada ADC, error en muestreo
+
+
+ind=1;
+indi=1;
+indo=1;
+indu=1;
+inda=1;
+inde=1;
+indec=1;
+ind15=1;
+ind31=1;
+ind63=1;
+ind127=1;
+ind511=1;
+ind8191=1;
+seq_7 =sec7(); 
+ seq_15 =sec15();   
+seq_31 =sec31(); 
+ seq_63 =sec63();
+ seq_127 =sec127();
+ seq_511 =sec511();    
+ seq_8191 =sec8191();
+seq_m =secmucho();
+ci=1;
+seq_r =rand();
+ss(ci)=seq_r;
+seq_c =logistico();
+ssc(ci)=seq_c;
+ci=ci+1;
+    if (seq_c<0.5)
+        seq_c=0;
+    else
+        seq_c=1;
+    end
+%*****       %actualiza los registros usando sec7
+        if (seq_7==0) 
+                ind_7=elige0_7;
+                elige0_7=mem2_7;
+            else
+                 ind_7=elige1_7;
+              elige1_7=mem2_7;
+            end
+                mem2_7=mem1_7;
+                mem1_7=ind_7;
+%*****       %actualiza los registros usando sec15
+if (seq_15==0) 
+                ind_15=elige0_15;
+                elige0_15=mem2_15;
+            else
+                 ind_15=elige1_15;
+              elige1_15=mem2_15;
+            end
+                mem2_15=mem1_15;
+                mem1_15=ind_15;
+				
+%*****       %actualiza los registros usando sec31
+if (seq_31==0) 
+                ind_31=elige0_31;
+                elige0_15=mem2_31;
+            else
+                 ind_31=elige1_31;
+              elige1_31=mem2_31;
+            end
+                mem2_31=mem1_31;
+                mem1_31=ind_31;
+                
+  %*****       %actualiza los registros usando sec63
+        if (seq_63==0) 
+                ind_63=elige0_63;
+                elige0_63=mem2_63;
+            else
+                 ind_63=elige1_63;
+              elige1_63=mem2_63;
+            end
+                mem2_63=mem1_63;
+                mem1_63=ind_63;  
+
+  %*****       %actualiza los registros usando sec127
+        if (seq_127==0) 
+                ind_127=elige0_127;
+                elige0_127=mem2_127;
+            else
+                 ind_127=elige1_127;
+              elige1_127=mem2_127;
+            end
+                mem2_127=mem1_127;
+                mem1_127=ind_127;  				
+  %*****       %actualiza los registros usando sec511
+        if (seq_511==0) 
+                ind_511=elige0_511;
+                elige0_511=mem2_511;
+            else
+                 ind_511=elige1_511;
+              elige1_511=mem2_511;
+            end
+                mem2_511=mem1_511;
+                mem1_511=ind_511;  
+   %*****       %actualiza los registros usando sec8191
+        if (seq_8191==0) 
+                ind_8191=elige0_8191;
+                elige0_8191=mem2_8191;
+            else
+                 ind_8191=elige1_8191;
+              elige1_8191=mem2_8191;
+            end
+                mem2_8191=mem1_8191;
+                mem1_8191=ind_8191;                 
+%************   %actualiza los registros usando sec_m LSFR muiy largo
+ 
+if (seq_m==0) 
+    ind_m=elige0_m;
+    elige0_m=mem2_m;
+else
+    ind_m=elige1_m;
+    elige1_m=mem2_m;
+end
+mem2_m=mem1_m;
+mem1_m=ind_m;
+
+%************   %actualiza los registros usando sec_c caotico mapa
+ 
+if (seq_c==0) 
+    ind_c=elige0_c;
+    elige0_c=mem2_c;
+else
+    ind_c=elige1_c;
+    elige1_c=mem2_c;
+end
+mem2_c=mem1_c;
+mem1_c=ind_c;
+%************   %actualiza los registros usando sec_r rand de matlab
+if (seq_r==0) 
+    ind_r=elige0_r;
+    elige0_r=mem2_r;
+else
+    ind_r=elige1_r;
+    elige1_r=mem2_r;
+end
+mem2_r=mem1_r;
+mem1_r=ind_r;
+
+for k=1:1:L                                                                                                                                                                                                                    
+if (L>=indo*TTS+At(mod(indo-1,MAM)+1) && L>=ind511*TTS+At(ind_511) && L>=indu*TTS+At(ind_7) && L>=ind15*TTS+At(ind_15) && L>=ind63*TTS+At(ind_63)  && L>=ind31*TTS+At(ind_31)  && L>=ind127*TTS+At(ind_127) && L>=ind8191*TTS+At(ind_8191) && L>=inda*TTS+At(ind_m) &&  L>=indec*TTS+At(ind_c) &&  L>=inde*TTS+At(ind_r))
+ %muestreada con 4 ADCs secuenciales cada uno con su error de amplitud,
+ %tiempo y fase que se repiten en la misma muestra
+if (k<indo*TTS+At(mod(indo-1,MAM)+1))  %retengo el valor durante todo TTS
+    y(k)=(1+Ag(mod(indo-1,MAM)+1))*u(indo*TTS+At(mod(indo-1,MAM)+1))+Ao(mod(indo-1,MAM)+1);  
+else
+    y(k)=(1+Ag(mod(indo-1,MAM)+1))*u(indo*TTS+At(mod(indo-1,MAM)+1))+Ao(mod(indo-1,MAM)+1); 
+    indo=indo+1;
+end  
+
+ %muestreada con 4 ADCs seleccionados con secuencia LSR de periodo 7
+if (k<indu*TTS+At(ind_7))  
+    y_7(k)=(1+Ag(ind_7))*u(indu*TTS+At(ind_7))+Ao(ind_7);  
+else
+     y_7(k)=(1+Ag(ind_7))*u(indu*TTS+At(ind_7))+Ao(ind_7); 
+    indu=indu+1;
+    %*****       %actualiza los registros usando sec7
+       seq_7 =sec7(); 
+        if (seq_7==0) 
+                ind_7=elige0_7;
+                elige0_7=mem2_7;
+            else
+                 ind_7=elige1_7;
+              elige1_7=mem2_7;
+            end
+         mem2_7=mem1_7;
+         mem1_7=ind_7;
+end  
+
+ %muestreada con 4 ADCs seleccionados con secuencia LSR de periodo 15
+if (k<ind15*TTS+At(ind_15))  
+    y_15(k)=(1+Ag(ind_15))*u(ind15*TTS+At(ind_15))+Ao(ind_15);  
+else
+     y_15(k)=(1+Ag(ind_15))*u(ind15*TTS+At(ind_15))+Ao(ind_15); 
+    ind15=ind15+1;
+    %*****       %actualiza los registros usando sec15
+       seq_15 =sec15(); 
+        if (seq_15==0) 
+                ind_15=elige0_15;
+                elige0_15=mem2_15;
+            else
+                 ind_15=elige1_15;
+              elige1_15=mem2_15;
+            end
+         mem2_15=mem1_15;
+         mem1_15=ind_15;
+end  
+
+ %muestreada con 4 ADCs seleccionados con secuencia LSR de periodo 31
+if (k<ind31*TTS+At(ind_31))  
+    y_31(k)=(1+Ag(ind_31))*u(ind31*TTS+At(ind_31))+Ao(ind_31);  
+else
+     y_31(k)=(1+Ag(ind_31))*u(ind31*TTS+At(ind_31))+Ao(ind_31); 
+    ind31=ind31+1;
+    %*****       %actualiza los registros usando sec15
+       seq_31 =sec31(); 
+        if (seq_31==0) 
+                ind_31=elige0_31;
+                elige0_31=mem2_31;
+            else
+                 ind_31=elige1_31;
+              elige1_31=mem2_31;
+            end
+         mem2_31=mem1_31;
+         mem1_31=ind_31;
+end 
+
+ %muestreada con 4 ADCs seleccionados con secuencia LSR de periodo 63
+if (k<ind63*TTS+At(ind_63))  
+    y_63(k)=(1+Ag(ind_63))*u(ind63*TTS+At(ind_63))+Ao(ind_63);  
+else
+     y_63(k)=(1+Ag(ind_63))*u(ind63*TTS+At(ind_63))+Ao(ind_63); 
+    ind63=ind63+1;
+    %*****       %actualiza los registros usando sec63
+       seq_63 =sec63(); 
+        if (seq_63==0) 
+                ind_63=elige0_63;
+                elige0_63=mem2_63;
+            else
+                 ind_63=elige1_63;
+              elige1_63=mem2_63;
+            end
+         mem2_63=mem1_63;
+         mem1_63=ind_63;
+end  
+
+ %muestreada con 4 ADCs seleccionados con secuencia LSR de periodo 127
+if (k<ind127*TTS+At(ind_127))  
+    y_127(k)=(1+Ag(ind_127))*u(ind127*TTS+At(ind_127))+Ao(ind_127);  
+else
+     y_127(k)=(1+Ag(ind_127))*u(ind127*TTS+At(ind_127))+Ao(ind_127); 
+    ind127=ind127+1;
+    %*****       %actualiza los registros usando sec63
+       seq_127 =sec127(); 
+        if (seq_127==0) 
+                ind_127=elige0_127;
+                elige0_127=mem2_127;
+            else
+                 ind_127=elige1_127;
+              elige1_127=mem2_127;
+            end
+         mem2_127=mem1_127;
+         mem1_127=ind_127;
+end 
+
+  %muestreada con 4 ADCs seleccionados con secuencia LSR de periodo 511
+if (k<ind511*TTS+At(ind_511))  
+    y_511(k)=(1+Ag(ind_511))*u(ind511*TTS+At(ind_511))+Ao(ind_511);  
+else
+     y_511(k)=(1+Ag(ind_511))*u(ind511*TTS+At(ind_511))+Ao(ind_511); 
+    ind511=ind511+1;
+    %*****       %actualiza los registros usando sec511
+       seq_511 =sec511(); 
+        if (seq_511==0) 
+                ind_511=elige0_511;
+                elige0_511=mem2_511;
+            else
+                 ind_511=elige1_511;
+              elige1_511=mem2_511;
+            end
+         mem2_511=mem1_511;
+         mem1_511=ind_511;
+end 
+ %muestreada con 4 ADCs seleccionados con secuencia LSR de periodo 8191
+if (k<ind8191*TTS+At(ind_8191))  
+    y_8191(k)=(1+Ag(ind_8191))*u(ind8191*TTS+At(ind_8191))+Ao(ind_8191);  
+else
+     y_8191(k)=(1+Ag(ind_8191))*u(ind8191*TTS+At(ind_8191))+Ao(ind_8191); 
+    ind8191=ind8191+1;
+    %*****       %actualiza los registros usando sec511
+       seq_8191 =sec8191(); 
+        if (seq_8191==0) 
+                ind_8191=elige0_8191;
+                elige0_8191=mem2_8191;
+            else
+                 ind_8191=elige1_8191;
+              elige1_8191=mem2_8191;
+            end
+         mem2_8191=mem1_8191;
+         mem1_8191=ind_8191;
+end 
+ %muestreada con 4 ADCs seleccionados con secuencia LSR de periodo muy
+ %largo
+if (k<inda*TTS+At(ind_m))  
+    y_m(k)=(1+Ag(ind_m))*u(inda*TTS+At(ind_m))+Ao(ind_m);  
+else
+     y_m(k)=(1+Ag(ind_m))*u(inda*TTS+At(ind_m))+Ao(ind_m); 
+    inda=inda+1;
+
+%************   %actualiza los registros usando secm
+    seq_m =secmucho(); 
+    if (seq_m==0) 
+        ind_m=elige0_m;
+         elige0_m=mem2_m;
+    else
+        ind_m=elige1_m;
+        elige1_m=mem2_m;
+    end
+        mem2_m=mem1_m;
+        mem1_m=ind_m;    
+    
+    
+end  
+
+%muestreada con 4 ADCs seleccionados con secuencia caotica
+ %largo
+if (k<indec*TTS+At(ind_c))  
+    y_c(k)=(1+Ag(ind_c))*u(inde*TTS+At(ind_c))+Ao(ind_c);  
+else
+     y_c(k)=(1+Ag(ind_c))*u(inde*TTS+At(ind_c))+Ao(ind_c); 
+    indec=indec+1;
+
+%************   %actualiza los registros usando secm
+seq_c =logistico();
+ssc(ci)=seq_c;
+ci=ci+1;
+    if (seq_c<0.5)
+        seq_c=0;
+    else
+        seq_c=1;
+    end
+    
+    
+    if (seq_c==0) 
+        ind_c=elige0_c;
+         elige0_c=mem2_c;
+    else
+        ind_c=elige1_c;
+        elige1_c=mem2_c;
+    end
+        mem2_c=mem1_c;
+        mem1_c=ind_c;    
+    
+    
+end  
+
+
+ %muestreada con 4 ADCs seleccionados con secuencia rand de matlab
+ %largo
+if (k<inde*TTS+At(ind_r))  
+    y_r(k)=(1+Ag(ind_r))*u(inde*TTS+At(ind_r))+Ao(ind_r);  
+else
+     y_r(k)=(1+Ag(ind_r))*u(inde*TTS+At(ind_r))+Ao(ind_r); 
+    inde=inde+1;
+
+%************   %actualiza los registros usando secm
+seq_r =rand();
+ss(ci)=seq_r;
+ci=ci+1;
+    if (seq_r<0.5)
+        seq_r=0;
+    else
+        seq_r=1;
+    end
+    
+    
+    if (seq_r==0) 
+        ind_r=elige0_r;
+         elige0_r=mem2_r;
+    else
+        ind_r=elige1_r;
+        elige1_r=mem2_r;
+    end
+        mem2_r=mem1_r;
+        mem1_r=ind_r;    
+    
+    
+end  
+end
+end
+
+sfdr_i(1)=sfdr(y,Fs);
+sfdr_i(2)=sfdr(y_7,Fs);
+sfdr_i(3)=sfdr(y_15,Fs);
+sfdr_i(4)=sfdr(y_31,Fs);
+sfdr_i(5)=sfdr(y_63,Fs);
+sfdr_i(6)=sfdr(y_127,Fs);
+sfdr_i(7)=sfdr(y_511,Fs);
+sfdr_i(8)=sfdr(y_8191,Fs);
+sfdr_i(9)=sfdr(y_m,Fs);
+sfdr_i(10)=sfdr(y_r,Fs);
+sfdr_i(11)=sfdr(y_c,Fs);
+
+plot(sfdr_i,'y.-');hold on;
+sfdr_y(1)=sfdr_y(1)+sfdr_i(1);
+sfdr_y(2)=sfdr_y(2)+sfdr_i(2);
+sfdr_y(3)=sfdr_y(3)+sfdr_i(3);
+sfdr_y(4)=sfdr_y(4)+sfdr_i(4);
+sfdr_y(5)=sfdr_y(5)+sfdr_i(5);
+sfdr_y(6)=sfdr_y(6)+sfdr_i(6);
+sfdr_y(7)=sfdr_y(7)+sfdr_i(7);
+sfdr_y(8)=sfdr_y(8)+sfdr_i(8);
+sfdr_y(9)=sfdr_y(9)+sfdr_i(9);
+sfdr_y(10)=sfdr_y(10)+sfdr_i(10);
+sfdr_y(11)=sfdr_y(11)+sfdr_i(11);
+% sinad(y,fc)
+% sinad(y_7,fc)
+% sinad(y_15,fc)
+% sinad(y_63,fc)
+% sinad(y_511,fc)
+% sinad(y_8191,fc)
+% sinad(y_m,fc)
+% sinad(y_c,fc)
+
+% L=length(y);
+% P1_y=P1_y+espectro(y,L);  % 4 ADCS secuanciales
+% P1_y7=P1_y7+espectro(y_7,L);
+% P1_y15=P1_y15+espectro(y_15,L);
+% P1_y63=P1_y63+espectro(y_63,L);
+% P1_y511=P1_y511+espectro(y_511,L);
+% P1_y8191=P1_y8191+espectro(y_8191,L);
+% P1_ym=P1_ym+espectro(y_m,L);
+% P1_yc=P1_yc+espectro(y_c,L);
+end
+plot(sfdr_y/promedia,'k.-');
