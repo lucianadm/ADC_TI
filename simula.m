@@ -63,7 +63,7 @@ sec8191 = comm.PNSequence('Polynomial','x^13+x^12+x^10+x^9+1', ...%r=13 =>period
 secmucho = comm.PNSequence('Polynomial','x^40+x^5+x^4+x^3+1', ...  %r=40 =>periodo 2^r-1
     'InitialConditions',[0 0 0 1 0 0 0 1 0 0 0 1 1 1 0 0 0 1 0 0 0 1 1 1 0 0 0 1 0 0 0 1 1 1 0 0 0 1 0 0],'SamplesPerFrame',1);
 promedia=100;
-for prom=1:promedia
+for prom=1:promedia %Promedio 100 señales con distintos errores cada ADC
 
 mem1_7=2;   %registro donde guarda el ADC que se eligio el ciclo anterior
 mem2_7=3;    %registro donde guarda el ADC que se eligio 2 ciclos antes
@@ -123,9 +123,10 @@ mem2_r=3;   %registro donde guarda el ADC que se eligio 2 ciclos antes
 elige0_r=4;  %registro donde guarda el ADC que se peude elegir
 elige1_r=1;   %registro donde guarda el ADC que se peude elegir
 
-Ag=randn(1,M+AM)*0.2;%error de amplitud de cada ADC
-Ao=randn(1,M+AM)*0.2;%error de offset de cada ADC
-At=floor(rand(1,M+AM)*TTS/6);%error de jitter de cada ADC, error en muestreo
+%errores de los ADCS van a cambiar en cada corrida por eso promedio 100
+Ag=randn(1,M+AM)*0.2;%error de amplitud de cada ADC, el 0.2 se lo puse a ojo
+Ao=randn(1,M+AM)*0.2;%error de offset de cada ADC, el 0.2 se lo puse a ojo
+At=floor(rand(1,M+AM)*TTS/6);%error en el tiempo de muestreo, la amplitud maxima es TTS/6 a ojo (TTS es las muestras q me salteo entre sample y sample)
 
 
 ind=1;
@@ -141,6 +142,7 @@ ind63=1;
 ind127=1;
 ind511=1;
 ind8191=1;
+%genero un numero con cada generador de ruido que pruebo
 seq_7 =sec7(); 
  seq_15 =sec15();   
 seq_31 =sec31(); 
@@ -151,9 +153,15 @@ seq_31 =sec31();
 seq_m =secmucho();
 ci=1;
 seq_r =rand();
-ss(ci)=seq_r;
+ss(ci)=seq_r; %almaceno en ss la secuencia aleatoria para poder verla desp , ver si tiene periodo de repeticion,etc
+    if (seq_r<0.5)
+        seq_r=0;
+    else
+        seq_r=1;
+    end
+
 seq_c =logistico();
-ssc(ci)=seq_c;
+ssc(ci)=seq_c;  %almaceno en ssc la secuencia caotica para poder verla desp , ver si tiene periodo de repeticion,etc
 ci=ci+1;
     if (seq_c<0.5)
         seq_c=0;
@@ -498,7 +506,7 @@ ci=ci+1;
 end  
 end
 end
-
+%funciones que calculan el Rango Dinámico Libre de Espurios
 sfdr_i(1)=sfdr(y,Fs);
 sfdr_i(2)=sfdr(y_7,Fs);
 sfdr_i(3)=sfdr(y_15,Fs);
@@ -511,7 +519,7 @@ sfdr_i(9)=sfdr(y_m,Fs);
 sfdr_i(10)=sfdr(y_r,Fs);
 sfdr_i(11)=sfdr(y_c,Fs);
 
-plot(sfdr_i,'y.-');hold on;
+plot(sfdr_i,'y.-');hold on; %grafico el SFDR para cada una de las 100 corridas para ver si dan con mucha dispersion
 sfdr_y(1)=sfdr_y(1)+sfdr_i(1);
 sfdr_y(2)=sfdr_y(2)+sfdr_i(2);
 sfdr_y(3)=sfdr_y(3)+sfdr_i(3);
@@ -523,23 +531,7 @@ sfdr_y(8)=sfdr_y(8)+sfdr_i(8);
 sfdr_y(9)=sfdr_y(9)+sfdr_i(9);
 sfdr_y(10)=sfdr_y(10)+sfdr_i(10);
 sfdr_y(11)=sfdr_y(11)+sfdr_i(11);
-% sinad(y,fc)
-% sinad(y_7,fc)
-% sinad(y_15,fc)
-% sinad(y_63,fc)
-% sinad(y_511,fc)
-% sinad(y_8191,fc)
-% sinad(y_m,fc)
-% sinad(y_c,fc)
 
-% L=length(y);
-% P1_y=P1_y+espectro(y,L);  % 4 ADCS secuanciales
-% P1_y7=P1_y7+espectro(y_7,L);
-% P1_y15=P1_y15+espectro(y_15,L);
-% P1_y63=P1_y63+espectro(y_63,L);
-% P1_y511=P1_y511+espectro(y_511,L);
-% P1_y8191=P1_y8191+espectro(y_8191,L);
-% P1_ym=P1_ym+espectro(y_m,L);
-% P1_yc=P1_yc+espectro(y_c,L);
+
 end
-plot(sfdr_y/promedia,'k.-');
+plot(sfdr_y/promedia,'k.-');%grafico el promedio de los 100 Rango Dinámico Libre de Espurios
