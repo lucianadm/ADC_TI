@@ -22,7 +22,7 @@ bits=5;
 niveles=2^bits-1;   %-2^(bits-1)=-16 a  2^(bits-1)-1=15
 
 uu = (2^bits-1)/2*sin(2*pi*fc*t); %señal  sinusoide de fc Hz 
-u=ceil(uu);                        %señal digitalizada a muestrear cada TTS 
+u=ceil(uu);
 
 f = Fs*(0:(L/2))/L;
 
