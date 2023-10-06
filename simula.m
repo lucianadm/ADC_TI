@@ -537,3 +537,26 @@ sfdr_y(11)=sfdr_y(11)+sfdr_i(11);
 
 end
 plot(sfdr_y/promedia,'k.-');%grafico el promedio de los 100 Rango Dinámico Libre de Espurios
+
+
+axes1 = axes;
+hold(axes1,'on');
+plot(sfdr_y/promedia,'ko-');%grafico el promedio de los 100 Rango Dinámico Libre de Espurio
+
+% Create ylabel
+ylabel('SFDR','FontName','Arial');
+
+% Create xlabel
+xlabel('Período de secuencia de selección','FontName','Arial');
+
+
+% Uncomment the following line to preserve the X-limits of the axes
+% xlim(axes1,[1 14]);
+box(axes1,'on');
+% Set the remaining axes properties
+set(axes1,'FontName','Arial','FontSize',13,'XGrid','on','XTick',...
+    [1 2 3 4 5 6 7 8 9 10 11],'XTickLabel',...
+    {'7','15','31','63','127','255','511','8191','2^{40}-1','rand','ideal'},...
+    'YGrid','on');
+
+
